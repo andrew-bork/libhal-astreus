@@ -1,3 +1,5 @@
+
+#pragma once
 // Copyright 2024 Khalil Estell
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
 
 #include <optional>
 
@@ -20,6 +21,7 @@
 #include <libhal/output_pin.hpp>
 #include <libhal/serial.hpp>
 #include <libhal/steady_clock.hpp>
+#include <libhal/i2c.hpp>
 
 struct resource_list
 {
@@ -27,6 +29,10 @@ struct resource_list
   std::optional<hal::output_pin*> status_led;
   std::optional<hal::serial*> console;
   std::optional<hal::steady_clock*> clock;
+
+  hal::i2c* i2c;
 };
 
 resource_list initialize_platform();
+
+// resource_list resources;

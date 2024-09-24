@@ -17,6 +17,7 @@
 #include <libhal-arm-mcu/lpc40/constants.hpp>
 #include <libhal-arm-mcu/lpc40/output_pin.hpp>
 #include <libhal-arm-mcu/lpc40/uart.hpp>
+#include <libhal-arm-mcu/lpc40/i2c.hpp>
 #include <libhal-arm-mcu/system_control.hpp>
 
 #include <resource_list.hpp>
@@ -40,10 +41,13 @@ resource_list initialize_platform()
 
   static hal::lpc40::output_pin led(1, 10);
 
+  static hal::lpc40::i2c i2c0(0);
+
   return {
     .reset = +[]() { hal::cortex_m::reset(); },
     .status_led = &led,
     .console = &uart0,
     .clock = &counter,
+    .i2c= &i2c0
   };
 }

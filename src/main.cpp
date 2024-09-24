@@ -17,15 +17,18 @@
 #include <libhal-util/steady_clock.hpp>
 #include <libhal/error.hpp>
 
-#include <resource_list.hpp>
+#include "resource_list.hpp"
 
-// This is only global so that the terminate handler can use the resources
+#include "application.hpp"
+
+// This is only global so that the terminate handler can use the hardware
 // provided.
-resource_list resources{};
+
+resource_list hardware;
 
 [[noreturn]] void terminate_handler() noexcept
 {
-  bool valid = resources.status_led && resources.clock;
+  bool valid = hardware.status_led && hardware.clock;
   if (not valid) {
     // spin here until debugger is connected
     while (true) {
@@ -37,8 +40,8 @@ resource_list resources{};
   // On GDB, use the `where` command to see if you have the `terminate_handler`
   // in your stack trace.
 
-  auto& led = *resources.status_led.value();
-  auto& clock = *resources.clock.value();
+  auto& led = *hardware.status_led.value();
+  auto& clock = *hardware.clock.value();
 
   while (true) {
     using namespace std::chrono_literals;
@@ -53,12 +56,10 @@ resource_list resources{};
   }
 }
 
-void application();
-
 int main()
 {
   try {
-    resources = initialize_platform();
+    hardware = initialize_platform();
   } catch (...) {
     while (true) {
       // halt here and wait for a debugger to connect
@@ -71,8 +72,8 @@ int main()
   try {
     application();
   } catch (std::bad_optional_access const& e) {
-    if (resources.console) {
-      hal::print(*resources.console.value(),
+    if (hardware.console) {
+      hal::print(*hardware.console.value(),
                  "A resource required by the application was not available!\n"
                  "Calling terminate!\n");
     }
@@ -80,33 +81,4 @@ int main()
 
   // Terminate if the code reaches this point.
   std::terminate();
-}
-
-void application()
-{
-  using namespace std::chrono_literals;
-
-  auto& led = *resources.status_led.value();
-  auto& clock = *resources.clock.value();
-  auto& console = *resources.console.value();
-
-  hal::print(console, "Starting Application!\n");
-  hal::print(console, "Will reset after ~10 seconds\n");
-
-  for (int i = 0; i < 10; i++) {
-    // Print message
-    hal::print(console, "Hello, World\n");
-
-    // Toggle LED
-    led.level(true);
-    hal::delay(clock, 500ms);
-
-    led.level(false);
-    hal::delay(clock, 500ms);
-  }
-
-  hal::print(console, "Resetting!\n");
-  hal::delay(clock, 100ms);
-
-  resources.reset();
 }

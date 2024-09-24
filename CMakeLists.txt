@@ -31,9 +31,12 @@ endif()
 find_package(libhal-$ENV{LIBHAL_PLATFORM_LIBRARY} REQUIRED CONFIG)
 find_package(libhal-util REQUIRED CONFIG)
 
+file(GLOB SRC_FILES src/*.cpp)
+
 add_executable(${PROJECT_NAME}
-    src/main.cpp
+    # src/main.cpp
     platforms/$ENV{LIBHAL_PLATFORM}.cpp
+    ${SRC_FILES}
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall -Wextra --save-temps)
