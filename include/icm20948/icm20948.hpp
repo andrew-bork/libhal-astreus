@@ -191,10 +191,10 @@ class icm20948 {
         /**
          * @brief Return the current acceleration readings in m/s^2
          */
-        inline vec3 acceleration() {
+        inline math::vec3 acceleration() {
             std::array<hal::byte, 6> raw_data;
             register_read(icm20948_reg::accel_xout_h, raw_data);
-            vec3 out;
+            math::vec3 out;
             out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) / m_accelerometer_sensitivity;
             out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) / m_accelerometer_sensitivity;
             out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) / m_accelerometer_sensitivity;
@@ -203,17 +203,17 @@ class icm20948 {
         /**
          * @brief Return the current angular rate readings in rad/s.
          */
-        inline vec3 angular_rate() {
+        inline math::vec3 angular_rate() {
             std::array<hal::byte, 6> raw_data;
             register_read(icm20948_reg::gyro_xout_h, raw_data);
-            vec3 out;
+            math::vec3 out;
             out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) / m_gyroscope_sensivity;
             out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) / m_gyroscope_sensivity;
             out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) / m_gyroscope_sensivity;
             return out;
         }
 
-        inline void read(vec3& acceleration, vec3& angular_rate) {
+        inline void read(math::vec3& acceleration, math::vec3& angular_rate) {
             std::array<hal::byte, 12> raw_data;
             register_read(icm20948_reg::accel_xout_h, raw_data);
             acceleration.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) / m_accelerometer_sensitivity;
@@ -229,10 +229,10 @@ class icm20948 {
         /**
          * @brief Return the current magnetometer readings in uT
          */
-        inline vec3 magnetic_field() {
+        inline math::vec3 magnetic_field() {
             std::array<hal::byte, 8> raw_data; // Must read the ST2 register at the end? idk.
             magnetometer_register_read(icm20948_reg::ak09916_hxl, raw_data);
-            vec3 out;
+            math::vec3 out;
             out.x = static_cast<float>(combine_signed(raw_data[1], raw_data[0])) / m_magnetometer_sensivity;
             out.y = static_cast<float>(combine_signed(raw_data[3], raw_data[2])) / m_magnetometer_sensivity;
             out.z = static_cast<float>(combine_signed(raw_data[5], raw_data[4])) / m_magnetometer_sensivity;

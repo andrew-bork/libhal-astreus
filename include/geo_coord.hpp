@@ -18,7 +18,7 @@ struct geo_coord {
      * @param v Point to convert
      * @return GeoCoordinate
      */
-    static inline constexpr geo_coord cartesian_to_lat_lng_inaccurate(vec3 v) {
+    static inline constexpr geo_coord cartesian_to_lat_lng_inaccurate(math::vec3 v) {
         // https://en.wikipedia.org/wiki/Spherical_coordinate_system
         constexpr float R = 6378137.0;
         float r = std::sqrt(v.x*v.x+v.y*v.y+v.z*v.z);
@@ -37,7 +37,7 @@ struct geo_coord {
      * @param x Coordinate to Convert
      * @return Cartesion Coordinate
      */
-    static inline constexpr vec3 lat_lng_to_cartesian(geo_coord x) {
+    static inline constexpr math::vec3 lat_lng_to_cartesian(geo_coord x) {
         //https://stackoverflow.com/questions/1185408/converting-from-longitude-latitude-to-cartesian-coordinates
 
         constexpr float a = 6378137.0, // radius a of earth in meters cfr WGS84
@@ -49,7 +49,7 @@ struct geo_coord {
         float sin_lat = std::sin(latr);
         float Nphi=a/std::sqrt(1-e2*sin_lat*sin_lat);
         
-        vec3 out;
+        math::vec3 out;
         out.x=(Nphi+x.alt)*cos(latr)*cos(lonr);
         out.y=(Nphi+x.alt)*cos(latr)*sin(lonr);
         out.z=(b*b/(a*a)*Nphi+x.alt)*sin(latr);

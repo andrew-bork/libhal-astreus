@@ -4,7 +4,8 @@
 
 
 
-
-struct vec3 {
-    float x, y, z;
+namespace math {
+    struct vec3 {
+        float x, y, z;
+    };
 };
