@@ -1,28 +1,41 @@
-#pragma once
-
-#include <libhal/serial.hpp>
 #include <array>
-#include "geo_coord.hpp"
-#include <string_view>
+#include <span>
+#include <string>
 #include <cstdio>
+#include <fstream>
+#include <string_view>
+#include <iostream>
+#include "geo_coord.hpp"
 
-#include <libhal-util/serial.hpp>
-
-class neo_m9n {
-public:
-    neo_m9n(hal::serial& p_serial) : m_serial(p_serial) {
-
-    };
-
+struct nmea_parser {
+    public:
     /**
-     * @brief Parse the latest data received by the GPS.
+     * @brief Parse NMEA Messages contained from a Serial Stream.
      * 
+     * @param data Data from a serial stream.
      * @return True if a NMEA Message was fully parsed. False otherwise.
      */
-    inline bool update() {
-        std::array<hal::byte, 512> serial_msg;
-        auto result = m_serial.read(serial_msg);
-        return parse(result.data);
+    bool parse(std::span<const char> data) {
+        bool data_updated = false;
+
+        for(auto i = data.begin(); i != data.end(); i ++) {
+            if(_buffer_pos == _internal_buffer.begin()) {
+                if(*i == '$') {
+                    *_buffer_pos = *i;
+                    _buffer_pos++;
+                }
+            }else{
+                *_buffer_pos = *i;
+                _buffer_pos++;
+                
+                if(*(_buffer_pos-1) == '\n' && *(_buffer_pos-2) == '\r') {
+                    data_updated = true;
+                    process_buffered_message();
+                }
+            }
+        }
+
+        return data_updated;
     }
 
     /**
@@ -48,37 +61,6 @@ public:
     }
 
     private:
-
-
-    /**
-     * @brief Parse NMEA Messages contained from a Serial Stream.
-     * 
-     * @param data Data from a serial stream.
-     * @return True if a NMEA Message was fully parsed. False otherwise.
-     */
-    bool parse(std::span<const hal::byte> data) {
-        bool data_updated = false;
-
-        for(auto i = data.begin(); i != data.end(); i ++) {
-            if(_buffer_pos == _internal_buffer.begin()) {
-                if(*i == '$') {
-                    *_buffer_pos = *i;
-                    _buffer_pos++;
-                }
-            }else{
-                *_buffer_pos = *i;
-                _buffer_pos++;
-                
-                if(*(_buffer_pos-1) == '\n' && *(_buffer_pos-2) == '\r') {
-                    data_updated = true;
-                    process_buffered_message();
-                }
-            }
-        }
-
-        return data_updated;
-    }
-
     /**
      * @brief Process the message stored in the internal buffer. 
      * Message is required to a complete NMEA Message.
@@ -87,8 +69,8 @@ public:
     inline void process_buffered_message() {
         (*(_buffer_pos-2)) = '\0';
         _buffer_pos = _internal_buffer.begin();
-        auto x = std::span(_internal_buffer).subspan(3, 3);
-        if(x.size() == 3 && x[0] == 'G' && x[1] == 'G' && x[2] == 'A') process_GGA();
+        std::string_view x = std::span(_internal_buffer).subspan(3, 3);
+        if(x == "GGA") process_GGA();
     }
 
     /**
@@ -127,7 +109,7 @@ public:
             &_last_gga_update.height_of_geoid,
             &_last_gga_update.height_of_geoid_units,
             &unused,
-            _last_gga_update.dgps_station_id_checksum
+            &_last_gga_update.dgps_station_id_checksum
         );
 
         _last_gga_update.coord.lat = 
@@ -165,12 +147,35 @@ public:
 
     std::array<char, 512> _internal_buffer;
     std::array<char, 512>::iterator _buffer_pos = _internal_buffer.begin();
-
-
-private:
-    hal::serial& m_serial;
-    std::array<char, 512> m_msg_buffer;
-    struct {
-        bool is_fixed = false;
-    } m_last_data;
 };
+
+int main() {
+    nmea_parser parser;
+    
+    // parser.parse("");
+    printf("Hello World!\n");
+    std::ifstream t("../test-data/gps-test.txt");
+    char buf[512];
+    while(!t.eof()) {
+
+        t.read(buf, 512);
+        parser.parse(buf);
+        auto loc = parser.coord();
+        printf("%f,%f, %c\n", loc.lat, loc.lng, (parser.is_fixed() ? 'F' : 'N'));
+
+    }
+    // t >> buf;
+    
+
+    // const char * input = "ABC ABCDAB ABCDABCDABDE";
+    // const char * pattern = "ABCDABD";
+    // const char * input = "\r\r\noh no";
+    // const char * pattern = "\r\n";
+    // size_t i = test_find(input, pattern);
+
+    // if(i == -1) {
+    //     printf("\"%s\" not found in \"%s\"\n", pattern, input);
+    // }else {
+    //     printf("\"%s\" found in \"%s\" at i=%zu\n", pattern, input, i);
+    // }
+}

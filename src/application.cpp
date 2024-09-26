@@ -3,6 +3,8 @@
 
 
 
+#include "icm20948.hpp"
+#include "neo-m9n.hpp"
 
 
 
@@ -12,10 +14,16 @@ void application()
 {
   using namespace std::chrono_literals;
 
-  auto& led = *hardware.status_led.value();
+  // auto& led = *hardware.status_led.value();
   auto& clock = *hardware.clock.value();
   auto& console = *hardware.console.value();
   auto& i2c = *hardware.i2c;
+
+  // icm20948 imu(i2c);
+  // auto result = imu.acceleration();
+
+  neo_m9n gps(console);
+  gps.update();
 
 
   bus_scan(clock, console, i2c);
