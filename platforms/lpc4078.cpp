@@ -41,13 +41,15 @@ resource_list initialize_platform()
 
   static hal::lpc40::output_pin led(1, 10);
 
-  static hal::lpc40::i2c i2c0(0);
+  static hal::lpc40::i2c i2c2(2, hal::i2c::settings {
+      .clock_rate = 100.0_kHz,
+  });
 
   return {
     .reset = +[]() { hal::cortex_m::reset(); },
     .status_led = &led,
     .console = &uart0,
     .clock = &counter,
-    .i2c= &i2c0
+    .i2c= &i2c2
   };
 }

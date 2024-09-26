@@ -14,7 +14,7 @@
 static constexpr float pi = std::numbers::pi_v<float>;
 static constexpr float deg_t_rad = pi / 180.0f;
 static constexpr float rad_t_deg = 180.0f / pi;
-static constexpr float bit15limit = 32752.0f;
+static constexpr float bit15limit = 32768.0f;
 static constexpr float g = 9.81f;
 
 class icm20948 {
@@ -108,7 +108,7 @@ class icm20948 {
          */
         inline void sleep() {
             hal::byte pwr_mng_1_content = register_read(icm20948_reg::pwr_mgmt_1);
-            pwr_mng_1_content &= 0b1011'1111;
+            pwr_mng_1_content &= 0b0100'0000;
             register_write(icm20948_reg::pwr_mgmt_1, pwr_mng_1_content);
 
         }
@@ -119,7 +119,7 @@ class icm20948 {
          */
         inline void wake_up() {
             hal::byte pwr_mng_1_content = register_read(icm20948_reg::pwr_mgmt_1);
-            pwr_mng_1_content |= 0b0100'0000;
+            pwr_mng_1_content &= 0b1011'1111;
             register_write(icm20948_reg::pwr_mgmt_1, pwr_mng_1_content);
         }
 
@@ -129,7 +129,7 @@ class icm20948 {
          */
         inline void enable_accelerometer() {
             hal::byte pwr_mng_2_content = register_read(icm20948_reg::pwr_mgmt_2);
-            pwr_mng_2_content |= 0b0011'1000;
+            pwr_mng_2_content &= 0b1100'0111;
             register_write(icm20948_reg::pwr_mgmt_2, pwr_mng_2_content);
 
         }
@@ -140,7 +140,7 @@ class icm20948 {
          */
         inline void disable_accelerometer() {
             hal::byte pwr_mng_2_content = register_read(icm20948_reg::pwr_mgmt_2);
-            pwr_mng_2_content &= 0b1100'0111;
+            pwr_mng_2_content |= 0b0011'1000;
             register_write(icm20948_reg::pwr_mgmt_2, pwr_mng_2_content);
 
         }
@@ -151,7 +151,7 @@ class icm20948 {
          */
         inline void enable_gyroscope() {
             hal::byte pwr_mng_2_content = register_read(icm20948_reg::pwr_mgmt_2);
-            pwr_mng_2_content |= 0b0000'0111;
+            pwr_mng_2_content &= 0b1111'1000;
             register_write(icm20948_reg::pwr_mgmt_2, pwr_mng_2_content);
 
         }
@@ -162,7 +162,7 @@ class icm20948 {
          */
         inline void disable_gyroscope() {
             hal::byte pwr_mng_2_content = register_read(icm20948_reg::pwr_mgmt_2);
-            pwr_mng_2_content &= 0b1111'1000;
+            pwr_mng_2_content |= 0b0000'0111;
             register_write(icm20948_reg::pwr_mgmt_2, pwr_mng_2_content);
 
         }
@@ -178,14 +178,14 @@ class icm20948 {
          * 
          */
         inline void enable_all() {
-            register_write(icm20948_reg::pwr_mgmt_2, 0b0011'1111);
+            register_write(icm20948_reg::pwr_mgmt_2, 0b0000'0000);
         }
         /**
          * @brief Disable the accelerometer and gyroscope.
          * 
          */
         inline void disable_all() {
-            register_write(icm20948_reg::pwr_mgmt_2, 0b0000'0000);
+            register_write(icm20948_reg::pwr_mgmt_2, 0b0011'1111);
         }
 
         /**
@@ -195,9 +195,9 @@ class icm20948 {
             std::array<hal::byte, 6> raw_data;
             register_read(icm20948_reg::accel_xout_h, raw_data);
             math::vec3 out;
-            out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) / m_accelerometer_sensitivity;
-            out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) / m_accelerometer_sensitivity;
-            out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) / m_accelerometer_sensitivity;
+            out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_accelerometer_sensitivity;
+            out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_accelerometer_sensitivity;
+            out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_accelerometer_sensitivity;
             return out;
         }
         /**
@@ -207,22 +207,22 @@ class icm20948 {
             std::array<hal::byte, 6> raw_data;
             register_read(icm20948_reg::gyro_xout_h, raw_data);
             math::vec3 out;
-            out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) / m_gyroscope_sensivity;
-            out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) / m_gyroscope_sensivity;
-            out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) / m_gyroscope_sensivity;
+            out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_gyroscope_sensivity;
+            out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_gyroscope_sensivity;
+            out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_gyroscope_sensivity;
             return out;
         }
 
         inline void read(math::vec3& acceleration, math::vec3& angular_rate) {
             std::array<hal::byte, 12> raw_data;
             register_read(icm20948_reg::accel_xout_h, raw_data);
-            acceleration.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) / m_accelerometer_sensitivity;
-            acceleration.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) / m_accelerometer_sensitivity;
-            acceleration.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) / m_accelerometer_sensitivity;
+            acceleration.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_accelerometer_sensitivity;
+            acceleration.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_accelerometer_sensitivity;
+            acceleration.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_accelerometer_sensitivity;
 
-            angular_rate.x = static_cast<float>(combine_signed(raw_data[6], raw_data[7])) / m_gyroscope_sensivity;
-            angular_rate.y = static_cast<float>(combine_signed(raw_data[8], raw_data[9])) / m_gyroscope_sensivity;
-            angular_rate.z = static_cast<float>(combine_signed(raw_data[10], raw_data[11])) / m_gyroscope_sensivity;
+            angular_rate.x = static_cast<float>(combine_signed(raw_data[6], raw_data[7])) * m_gyroscope_sensivity;
+            angular_rate.y = static_cast<float>(combine_signed(raw_data[8], raw_data[9])) * m_gyroscope_sensivity;
+            angular_rate.z = static_cast<float>(combine_signed(raw_data[10], raw_data[11])) * m_gyroscope_sensivity;
         }
         
 
@@ -233,9 +233,9 @@ class icm20948 {
             std::array<hal::byte, 8> raw_data; // Must read the ST2 register at the end? idk.
             magnetometer_register_read(icm20948_reg::ak09916_hxl, raw_data);
             math::vec3 out;
-            out.x = static_cast<float>(combine_signed(raw_data[1], raw_data[0])) / m_magnetometer_sensivity;
-            out.y = static_cast<float>(combine_signed(raw_data[3], raw_data[2])) / m_magnetometer_sensivity;
-            out.z = static_cast<float>(combine_signed(raw_data[5], raw_data[4])) / m_magnetometer_sensivity;
+            out.x = static_cast<float>(combine_signed(raw_data[1], raw_data[0])) * m_magnetometer_sensivity;
+            out.y = static_cast<float>(combine_signed(raw_data[3], raw_data[2])) * m_magnetometer_sensivity;
+            out.z = static_cast<float>(combine_signed(raw_data[5], raw_data[4])) * m_magnetometer_sensivity;
             return out;
 
         }
@@ -444,15 +444,24 @@ class icm20948 {
             magnetometer_register_write(icm20948_reg::ak09916_cntl_3, 1);
         }
 
+
+        // inline void calibrate_gyro(const hal::steady_clock& p_clk) {
+        //     for(int i = 0; i < 1000; i ++) {
+        //         hal::p
+        //     }
+        // }
+
     private:
         hal::byte m_i2c_addr = icm20948_reg::icm20948_address;
         hal::byte m_mag_i2c_addr = icm20948_reg::ak09916_address;
         hal::i2c& m_bus;
 
+        float g_x=0.0f, g_y=0.0f, g_z=0.0f;
+
         float m_accelerometer_sensitivity = 1.0f;
         float m_gyroscope_sensivity = 1.0f;
         float m_magnetometer_sensivity = 4912.0f / bit15limit;
-
+    public:
         inline std::int16_t combine_signed(hal::byte high, hal::byte low) {
             return (static_cast<std::int16_t>(high) << 8) | static_cast<std::int16_t>(low);
         }

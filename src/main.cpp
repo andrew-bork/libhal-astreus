@@ -29,6 +29,9 @@ resource_list hardware;
 [[noreturn]] void terminate_handler() noexcept
 {
   bool valid = hardware.status_led && hardware.clock;
+  auto& console = *hardware.console.value();
+  hal::print(console, "CRASHED\n");
+
   if (not valid) {
     // spin here until debugger is connected
     while (true) {
@@ -39,6 +42,8 @@ resource_list hardware;
   // Otherwise, blink the led in a pattern, and wait for the debugger.
   // On GDB, use the `where` command to see if you have the `terminate_handler`
   // in your stack trace.
+
+  // auto& console
 
   auto& led = *hardware.status_led.value();
   auto& clock = *hardware.clock.value();
