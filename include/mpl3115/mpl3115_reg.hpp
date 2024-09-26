@@ -8,11 +8,14 @@
 
 
 namespace mpl3115_reg {
+static constexpr hal::byte DEFAULT_I2C_ADDR = 0xC0;
 
 static constexpr hal::byte STATUS = 0x00;
 static constexpr hal::byte OUT_P_MSB = 0x01;
+static constexpr hal::byte OUT_T_MSB = 0x04;
 static constexpr hal::byte DR_STATUS = 0x06;
 static constexpr hal::byte OUT_P_DELTA_MSB = 0x07;
+static constexpr hal::byte OUT_T_DELTA_MSB = 0x0A;
 static constexpr hal::byte WHO_AM_I = 0x0C;
 static constexpr hal::byte F_STATUS = 0x0D;
 static constexpr hal::byte F_DATA = 0x0E;
@@ -22,6 +25,7 @@ static constexpr hal::byte SYSMOD = 0x11;
 static constexpr hal::byte INT_SOURCE = 0x12;
 static constexpr hal::byte PT_DATA_CFG = 0x13;
 static constexpr hal::byte BAR_IN_MSB = 0x14;
+static constexpr hal::byte BAR_IN_LSB = 0x15;
 static constexpr hal::byte P_TGT_MSB = 0x16;
 static constexpr hal::byte P_WND_MSB = 0x19;
 static constexpr hal::byte T_WND = 0x1B;

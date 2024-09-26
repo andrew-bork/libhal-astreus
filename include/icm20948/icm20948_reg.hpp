@@ -25,39 +25,6 @@ namespace icm20948_reg {
         BANK3 = 0b0011'0000
     };
 
-    enum gyro_scale : hal::byte {
-        dps_250 =0b000,
-        dps_500 =0b010,
-        dps_1000=0b100,
-        dps_2000=0b110
-    };
-
-    enum accel_scale : hal::byte {
-        g_2 =0b000,
-        g_4 =0b010,
-        g_8=0b100,
-        g_16=0b110
-    };
-
-    enum class gyro_averaging : hal::byte {
-        x1=0,
-        x2=1,
-        x4=2,
-        x8=3,
-        x16=4,
-        x32=5,
-        x64=6,
-        x128=7,
-    };
-    
-    
-    enum class accl_averaging : hal::byte {
-        x1=0,
-        x8=1,
-        x16=2,
-        x32=3,
-    };
-
 static constexpr hal::byte icm20948_address = 0x69;
 static constexpr hal::byte ak09916_address = 0x0C;
 
@@ -155,15 +122,6 @@ static constexpr hal::byte ak09916_status_2 = 0x18;
 static constexpr hal::byte ak09916_cntl_2 = 0x31;
 static constexpr hal::byte ak09916_cntl_3 = 0x32;
 
-enum ak09916_power_mode : hal::byte {
-    POWER_DOWN=0b0000'0000,
-    SINGLE=0b0000'0001,
-    HZ_10=0b0000'0010,
-    HZ_20=0b0000'0100,
-    HZ_50=0b0000'0110,
-    HZ_100=0b0000'1000,
-    SELF_TEST=0b0001'0000,
-};
 
 /* Register Bits */
 static constexpr hal::byte icm_reset = 0x41;

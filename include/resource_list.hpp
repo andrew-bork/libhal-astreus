@@ -25,12 +25,12 @@
 
 struct resource_list
 {
-  hal::callback<void()> reset;
-  std::optional<hal::output_pin*> status_led;
-  std::optional<hal::serial*> console;
-  std::optional<hal::steady_clock*> clock;
+    hal::callback<void()> reset;
+    std::optional<hal::output_pin*> status_led;
+    std::optional<hal::serial*> console;
+    std::optional<hal::steady_clock*> clock;
 
-  hal::i2c* i2c;
+    hal::i2c* i2c;
 };
 
 resource_list initialize_platform();
