@@ -456,7 +456,7 @@ class icm20948 {
         hal::byte m_mag_i2c_addr = icm20948_reg::ak09916_address;
         hal::i2c& m_bus;
 
-        float g_x=0.0f, g_y=0.0f, g_z=0.0f;
+        math::vec3 m_gyro_offset, m_accel_offset;
 
         float m_accelerometer_sensitivity = 1.0f;
         float m_gyroscope_sensivity = 1.0f;
