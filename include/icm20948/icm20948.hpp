@@ -210,6 +210,7 @@ class icm20948 {
             out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_gyroscope_sensivity;
             out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_gyroscope_sensivity;
             out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_gyroscope_sensivity;
+            out -= m_gyro_offset;
             return out;
         }
 
@@ -219,10 +220,12 @@ class icm20948 {
             acceleration.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_accelerometer_sensitivity;
             acceleration.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_accelerometer_sensitivity;
             acceleration.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_accelerometer_sensitivity;
+            
 
             angular_rate.x = static_cast<float>(combine_signed(raw_data[6], raw_data[7])) * m_gyroscope_sensivity;
             angular_rate.y = static_cast<float>(combine_signed(raw_data[8], raw_data[9])) * m_gyroscope_sensivity;
             angular_rate.z = static_cast<float>(combine_signed(raw_data[10], raw_data[11])) * m_gyroscope_sensivity;
+            angular_rate -= m_gyro_offset;
         }
         
 
@@ -445,11 +448,35 @@ class icm20948 {
         }
 
 
-        // inline void calibrate_gyro(const hal::steady_clock& p_clk) {
-        //     for(int i = 0; i < 1000; i ++) {
-        //         hal::p
-        //     }
-        // }
+        
+        inline void calibrate_gyro(hal::steady_clock& p_clk, int p_iterations, hal::time_duration p_delay) {
+            math::vec3 sum;
+            for(int i = 0; i < p_iterations; i ++) {
+                sum += angular_rate();
+                hal::delay(p_clk, p_delay);
+            }
+            m_gyro_offset = sum / static_cast<float>(p_iterations);
+        }
+        
+        inline void calibrate_accel(hal::steady_clock& p_clk, int p_iterations, hal::time_duration p_delay) {
+            math::vec3 sum;
+            for(int i = 0; i < p_iterations; i ++) {
+                sum += acceleration();
+                hal::delay(p_clk, p_delay);
+            }
+            m_accel_offset = (sum / static_cast<float>(p_iterations)) - math::vec3(0.0f, 0.0f, 1.0f);
+        }
+        
+        inline void calibrate_accel_gyro(hal::steady_clock& p_clk, int p_iterations, hal::time_duration p_delay) {
+            math::vec3 g_sum, a_sum;
+            for(int i = 0; i < p_iterations; i ++) {
+                g_sum += angular_rate();
+                a_sum += acceleration();
+                hal::delay(p_clk, p_delay);
+            }
+            m_gyro_offset = g_sum / static_cast<float>(p_iterations);
+            m_accel_offset = (a_sum / static_cast<float>(p_iterations)) - math::vec3(0.0f, 0.0f, 1.0f);
+        }
 
     private:
         hal::byte m_i2c_addr = icm20948_reg::icm20948_address;
