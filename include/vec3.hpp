@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cmath>
 
 
 
@@ -58,6 +58,21 @@ namespace math {
             y *= r;
             z *= r;
             return *this;
+        }
+
+        constexpr inline static vec3 cross(const vec3& l, const vec3& r) {
+            vec3 out;
+            out.x = l.y * r.z - l.z * r.y;
+            out.y = l.z * r.x - l.x * r.z;
+            out.z = l.x * r.y - l.y * r.x;
+            return out;
+        }
+
+        constexpr inline static float length(const vec3& a) {
+            return std::sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+        }
+        constexpr inline static float dot(const vec3& a, const vec3& b) {
+            return a.x*b.x+a.y*b.y+a.z*b.z;
         }
     };
 };

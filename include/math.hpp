@@ -144,6 +144,23 @@ namespace math{
             quarternion out(a, b * q.x, b * q.y, b * q.z);
             return out;
         }
+
+        static quarternion quarternion_between(const vec3& a, const vec3& b) {
+            float dot = vec3::dot(a, b);
+            quarternion res;
+            if(std::abs(dot + 1.0f) < 0.001f) {
+                vec3 rotated(a.y, -a.x, a.z);
+                res = quarternion::from_angle_axis(3.1415f, rotated);
+            }else {
+                vec3 cross = vec3::cross(a, b);
+                res.w = 1 + dot;
+                res.x = cross.x;
+                res.y = cross.y;
+                res.z = cross.z;
+                res.norm();
+            }
+            return res;
+        }
         // static vector rotateVector(math::quarternion& q, math::vector& in);
 
     };
