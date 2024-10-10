@@ -12,6 +12,51 @@
 
 
 
+
+
+
+enum frame_bytes : std::uint8_t {
+    START_OF_FRAME=0x01, // Start of header
+    END_OF_FRAME=0x04, // End of transmission
+    ESCAPE=0x27,
+};
+
+void start_frame() {
+  // Serial.print((char) START_OF_FRAME);
+}
+
+void send_byte(std::uint8_t b) {
+  switch(b) {
+    case START_OF_FRAME:
+    case END_OF_FRAME:
+    case ESCAPE:
+      // Serial.print((char) ESCAPE);
+    default:
+      // Serial.print((char) b);
+  }
+}
+
+void end_frame() {
+  // Serial.print((char) END_OF_FRAME);
+}
+
+template <typename T>
+void send(T x) {
+  union {
+    T a;
+    unsigned char bytes[sizeof(T)];
+  } thing;
+  thing.a = x;
+  // std::uint8_t msb = thing.bytes[0];
+  // std::uint8_t msb1 = x >> 16;
+  // std::uint8_t lsb1 = x >> 8;
+  // std::uint8_t lsb = x;
+  for(int i = 0; i < sizeof(T); i ++) {
+    send_byte(thing.bytes[i]);
+  }
+}
+
+
 void application()
 {
   using namespace std::chrono_literals;
