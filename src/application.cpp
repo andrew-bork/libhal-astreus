@@ -11,73 +11,31 @@
 #define r_t_d 57.2957795131 
 
 
-
-
-
-
-enum frame_bytes : std::uint8_t {
-    START_OF_FRAME=0x01, // Start of header
-    END_OF_FRAME=0x04, // End of transmission
-    ESCAPE=0x27,
-};
-
-void start_frame() {
-  // Serial.print((char) START_OF_FRAME);
-}
-
-void send_byte(std::uint8_t b) {
-  switch(b) {
-    case START_OF_FRAME:
-    case END_OF_FRAME:
-    case ESCAPE:
-      // Serial.print((char) ESCAPE);
-    default:
-      // Serial.print((char) b);
-  }
-}
-
-void end_frame() {
-  // Serial.print((char) END_OF_FRAME);
-}
-
-template <typename T>
-void send(T x) {
-  union {
-    T a;
-    unsigned char bytes[sizeof(T)];
-  } thing;
-  thing.a = x;
-  // std::uint8_t msb = thing.bytes[0];
-  // std::uint8_t msb1 = x >> 16;
-  // std::uint8_t lsb1 = x >> 8;
-  // std::uint8_t lsb = x;
-  for(int i = 0; i < sizeof(T); i ++) {
-    send_byte(thing.bytes[i]);
-  }
-}
-
+#include "mission_control.hpp"
 
 void application()
 {
   using namespace std::chrono_literals;
 
-  // auto& led = *hardware.status_led.value();
+  auto& led = *hardware.status_led.value();
   auto& clock = *hardware.clock.value();
   auto& console = *hardware.console.value();
   auto& i2c = *hardware.i2c;
 
+  mission_control mc(console);
+
   // bus_scan(clock, console, i2c);
-  hal::print<512>(console, "ICM20948 tsest\n");
+  // hal::print<512>(console, "ICM20948 tsest\n");
 
   icm20948 imu(i2c);
-  hal::print<512>(console, "ICM20948 WHO AM I: %02x\n", imu.who_am_i());
+  // hal::print<512>(console, "ICM20948 WHO AM I: %02x\n", imu.who_am_i());
   imu.reset();
   hal::delay(clock, 1ms);
   // hal::print<512>(console, "A\n");
 
   // imu.reset_magnetometer();
   // hal::print<512>(console, "B\n");
-
+  mc.log("Configuring Sensors");
   imu.set_accel_full_scale(icm20948::accel_scale::g_8);
   // hal::print<512>(console, "C\n");
 
@@ -95,9 +53,11 @@ void application()
   imu.wake_up();
 
 
-  hal::print(console, "Calibrating...");
+  // hal::print(console, "Calibrating...");
+  mc.log("Calibrating");
   imu.calibrate_accel_gyro(clock, 1000, 1ms);
-  hal::print(console, "Finished Calibration.\n");
+  mc.log("Finished Calibration");
+  // hal::print(console, "Finished Calibration.\n");
   // hal::print<512>(console, "K: %02x\n", imu.register_read(icm20948_reg::pwr_mgmt_1)); // 0b0100'0001
   // hal::print<512>(console, "C: %02x\n", imu.register_read(icm20948_reg::pwr_mgmt_2));
   // hal::print<512>(console, "d: %02x\n", imu.register_read(icm20948_reg::accel_config));
@@ -120,30 +80,62 @@ void application()
   math::quarternion orientation(1.0f);
 
 
-  int i = 0;
+  std::uint64_t i = 0;
   float dt = 0.001f;
+  float data_frame_dt = 1.0f;
+  bool k = false;
   std::uint64_t dt_ticks = static_cast<std::uint64_t>(dt * clock.frequency());
   std::uint64_t then = clock.uptime();
+  std::uint64_t data_frame_ticks = static_cast<std::uint64_t>(data_frame_dt / dt);
   while(true) {
     // std::uint64_t now = clock.uptime();
     // float dt = (now - then) / clock.frequency();
 
     // Update estimation.
-    auto rates = imu.angular_rate();
-    math::quarternion rate_quart(1.0f, rates.x * 0.5 * dt, rates.y * 0.5 * dt, rates.z * 0.5 * dt);
+    // auto rates = imu.angular_rate();
+    math::vec3 body_acceleration, body_rates;
+    imu.read(body_acceleration, body_rates);
+
+    math::quarternion rate_quart(1.0f, body_rates.x * 0.5 * dt, body_rates.y * 0.5 * dt, body_rates.z * 0.5 * dt);
     orientation = rate_quart * orientation;
     orientation.norm();
 
 
-    if(100 <= i) {
+    if(data_frame_ticks <= i) {
       i = 0;
-      auto euler = math::quarternion::to_euler_ZYX(orientation);
-      std::array<hal::byte, 12> a;
-      imu.register_read(icm20948_reg::gyro_xout_h, a);
+      // auto euler = math::quarternion::to_euler_ZYX(orientation);
+      // std::array<hal::byte, 12> a;
+      // imu.register_read(icm20948_reg::gyro_xout_h, a);
       // hal::print<512>(console, "0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", a[0], a[1], a[2], a[3], a[4], a[5]);
       // hal::print<512>(console, "Roll: %4.1f°, Pitch: %4.1f°, Yaw: %.41f°\n", rates.x*r_t_d, rates.y*r_t_d, rates.z*r_t_d);
 
-      hal::print<512>(console, "Roll: %4.1f°, Pitch: %4.1f°, Yaw: %.41f°\n", euler.x*r_t_d, euler.y*r_t_d, euler.z*r_t_d);
+      // hal::write(console);
+      // hal::print<512>(console, "Roll: %4.1f°, Pitch: %4.1f°, Yaw: %.41f°\n", euler.x*r_t_d, euler.y*r_t_d, euler.z*r_t_d);
+
+      mission_control_data_frame data;
+      data.time = clock.frequency() * clock.uptime();
+      data.orientation = orientation;
+      data.body_angular_rates = body_rates;
+      data.body_acceleration = body_acceleration;
+
+      mc.send_data_frame(data);
+      mc.log("Data frame sent");
+
+      // start_frame(console);
+      // send(console, orientation.x);
+      // send(console, orientation.y);
+      // send(console, orientation.z);
+      // send(console, orientation.w);
+
+      // send(console, rates.x);
+      // send(console, rates.y);
+      // send(console, rates.z);
+
+      // end_frame(console);
+      // console.flush();
+      
+      led.level(k);
+      k = !k;
     }
     i++;
 

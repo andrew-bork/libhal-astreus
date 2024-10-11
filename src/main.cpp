@@ -82,7 +82,11 @@ int main()
                  "A resource required by the application was not available!\n"
                  "Calling terminate!\n");
     }
-  }  // Allow any other exceptions to terminate the application
+  } 
+  hal::print(*hardware.console.value(),
+              "efwaljl;kdsajfkldasjfkl;dsjafkl;dsaj!\n"
+              "Calling terminate!\n");
+   // Allow any other exceptions to terminate the application
 
   // Terminate if the code reaches this point.
   std::terminate();
