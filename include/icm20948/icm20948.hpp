@@ -198,6 +198,7 @@ class icm20948 {
             out.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_accelerometer_sensitivity;
             out.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_accelerometer_sensitivity;
             out.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_accelerometer_sensitivity;
+            out -= m_accel_offset;
             return out;
         }
         /**
@@ -220,8 +221,11 @@ class icm20948 {
             acceleration.x = static_cast<float>(combine_signed(raw_data[0], raw_data[1])) * m_accelerometer_sensitivity;
             acceleration.y = static_cast<float>(combine_signed(raw_data[2], raw_data[3])) * m_accelerometer_sensitivity;
             acceleration.z = static_cast<float>(combine_signed(raw_data[4], raw_data[5])) * m_accelerometer_sensitivity;
-            
+            acceleration -= m_accel_offset;
 
+            // angular_rate.x = static_cast<float>(combine_signed(raw_data[6], raw_data[7])) * m_gyroscope_sensivity;
+            // angular_rate.y = static_cast<float>(combine_signed(raw_data[8], raw_data[9])) * m_gyroscope_sensivity;
+            // angular_rate.z = static_cast<float>(combine_signed(raw_data[10], raw_data[11])) * m_gyroscope_sensivity;
             angular_rate.x = static_cast<float>(combine_signed(raw_data[6], raw_data[7])) * m_gyroscope_sensivity;
             angular_rate.y = static_cast<float>(combine_signed(raw_data[8], raw_data[9])) * m_gyroscope_sensivity;
             angular_rate.z = static_cast<float>(combine_signed(raw_data[10], raw_data[11])) * m_gyroscope_sensivity;
@@ -278,16 +282,16 @@ class icm20948 {
         inline void set_gyro_full_scale(gyro_scale p_scale) {
             switch(p_scale) {
             case gyro_scale::dps_250:
-                m_gyroscope_sensivity = 250.0f * deg_t_rad / bit15limit;
+                m_gyroscope_sensivity = (1 * 250.0f * deg_t_rad / bit15limit);
                 break;
             case gyro_scale::dps_500:
-                m_gyroscope_sensivity = 500.0f * deg_t_rad / bit15limit;
+                m_gyroscope_sensivity = (1 * 500.0f * deg_t_rad / bit15limit);
                 break;
             case gyro_scale::dps_1000:
-                m_gyroscope_sensivity = 1000.0f * deg_t_rad / bit15limit;
+                m_gyroscope_sensivity = (1 * 1000.0f * deg_t_rad / bit15limit);
                 break;
             case gyro_scale::dps_2000:
-                m_gyroscope_sensivity = 2000.0f * deg_t_rad / bit15limit;
+                m_gyroscope_sensivity =(1 * 2000.0f * deg_t_rad / bit15limit);
                 break;
             }
             change_register_bank(icm20948_reg::BANK2);
@@ -330,7 +334,7 @@ class icm20948 {
             hal::byte gyro_config_2_data = register_read(icm20948_reg::gyro_config_2);
             gyro_config_2_data &= 0b1111'1000;
             gyro_config_2_data |= static_cast<hal::byte>(p_setting);
-            register_write(icm20948_reg::gyro_config_1, gyro_config_2_data);
+            register_write(icm20948_reg::gyro_config_2, gyro_config_2_data);
             change_register_bank(icm20948_reg::BANK0);
         }
 
@@ -376,16 +380,16 @@ class icm20948 {
         inline void set_accel_full_scale(accel_scale p_scale) {
             switch(p_scale) {
             case accel_scale::g_2:
-                m_gyroscope_sensivity = 250.0f * g / bit15limit;
+                m_accelerometer_sensitivity = 2.0f * g / bit15limit;
                 break;
             case accel_scale::g_4:
-                m_gyroscope_sensivity = 500.0f * g / bit15limit;
+                m_accelerometer_sensitivity = 4.0f * g / bit15limit;
                 break;
             case accel_scale::g_8:
-                m_gyroscope_sensivity = 1000.0f * g / bit15limit;
+                m_accelerometer_sensitivity = 8.0f * g / bit15limit;
                 break;
             case accel_scale::g_16:
-                m_gyroscope_sensivity = 2000.0f * g / bit15limit;
+                m_accelerometer_sensitivity = 16.0f * g / bit15limit;
                 break;
             }
             change_register_bank(icm20948_reg::BANK2);
@@ -479,6 +483,7 @@ class icm20948 {
         }
 
     private:
+    public:
         hal::byte m_i2c_addr = icm20948_reg::icm20948_address;
         hal::byte m_mag_i2c_addr = icm20948_reg::ak09916_address;
         hal::i2c& m_bus;
