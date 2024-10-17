@@ -1,6 +1,6 @@
 #include "application.hpp"
 #include "math.hpp"
-
+#include "debug.hpp"
 
 
 #include "icm20948/icm20948.hpp"
@@ -13,6 +13,8 @@
 
 #include "mission_control.hpp"
 
+mission_control* debug;
+
 void application()
 {
   using namespace std::chrono_literals;
@@ -23,6 +25,7 @@ void application()
   auto& i2c = *hardware.i2c;
 
   mission_control mc(console);
+  debug = &mc;
 
   // bus_scan(clock, console, i2c);
   // hal::print<512>(console, "ICM20948 tsest\n");
@@ -36,10 +39,16 @@ void application()
   // imu.reset_magnetometer();
   // hal::print<512>(console, "B\n");
   mc.log("Configuring Sensors");
-  imu.set_accel_full_scale(icm20948::accel_scale::g_8);
+  imu.set_accel_full_scale(icm20948::accel_scale::g_16);
+  // imu.set_accel_full_scale(icm20948::accel_scale::g_16);
+  // imu.set_accel_full_scale(icm20948::accel_scale::g_16);
+  // imu.set_accel_full_scale(icm20948::accel_scale::g_16);
   // hal::print<512>(console, "C\n");
 
-  imu.set_gyro_full_scale(icm20948::gyro_scale::dps_500);
+  imu.set_gyro_full_scale(icm20948::gyro_scale::dps_250);
+  // imu.set_gyro_full_scale(icm20948::gyro_scale::dps_250);
+  // imu.set_gyro_full_scale(icm20948::gyro_scale::dps_250);
+  // imu.set_gyro_full_scale(icm20948::gyro_scale::dps_250);
   // hal::print<512>(console, "D\n");
 
   imu.enable_accel_dlpf();
@@ -54,10 +63,9 @@ void application()
   imu.wake_up();
 
   imu.change_register_bank(icm20948_reg::BANK2);
-  imu.register_write(icm20948_reg::gyro_config_1, 0x1B);
-  imu.register_write(icm20948_reg::accel_config, 0x0D);
+  // imu.register_write(icm20948_reg::gyro_config_1, 0x1B);
+  // imu.register_write(icm20948_reg::accel_config, 0x0D);
   mc.log<512>("Gyro Config 1: %02X", imu.register_read(icm20948_reg::gyro_config_1)); // 0b00011011 0x0B
-  mc.log<512>("huh: %f", imu.m_gyro_offset);
   mc.log<512>("Gyro Config 2: %02X", imu.register_read(icm20948_reg::gyro_config_2));
   mc.log<512>("Accel Config 1: %02X", imu.register_read(icm20948_reg::accel_config)); // 0b00001101 0x0D
   mc.log<512>("Accel Config 2: %02X", imu.register_read(icm20948_reg::accel_config_2));
@@ -69,6 +77,8 @@ void application()
   imu.calibrate_accel_gyro(clock, 1000, 1ms);
   mc.log("Finished Calibration");
 
+  mc.log<512>("huh: %f %f %f", imu.m_gyro_offset.x, imu.m_gyro_offset.y, imu.m_gyro_offset.z);
+  mc.log<512>("huh: %f %f %f", imu.m_accel_offset.x, imu.m_accel_offset.y, imu.m_accel_offset.z);
   // hal::print(console, "Finished Calibration.\n");
   // hal::print<512>(console, "K: %02x\n", imu.register_read(icm20948_reg::pwr_mgmt_1)); // 0b0100'0001
   // hal::print<512>(console, "C: %02x\n", imu.register_read(icm20948_reg::pwr_mgmt_2));

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "debug.hpp"
 
 #include <libhal/i2c.hpp>
 #include <libhal-util/i2c.hpp>
@@ -15,7 +16,8 @@ static constexpr float pi = std::numbers::pi_v<float>;
 static constexpr float deg_t_rad = pi / 180.0f;
 static constexpr float rad_t_deg = 180.0f / pi;
 static constexpr float bit15limit = 32768.0f;
-static constexpr float g = 9.81f;
+// static constexpr float g = 9.81f;
+static constexpr float g = 1.0f;
 
 class icm20948 {
     public: 
@@ -394,9 +396,13 @@ class icm20948 {
             }
             change_register_bank(icm20948_reg::BANK2);
             hal::byte accel_config_data = register_read(icm20948_reg::accel_config);
+            debug_log<128>("original accel config: %02x", accel_config_data);
             accel_config_data &= 0b1111'1001;
             accel_config_data |= static_cast<hal::byte>(p_scale);
+            debug_log<128>("new accel config: %02x", accel_config_data);
             register_write(icm20948_reg::accel_config, accel_config_data);
+            accel_config_data = register_read(icm20948_reg::accel_config);
+            debug_log<128>("current accel config: %02x", accel_config_data);
             change_register_bank(icm20948_reg::BANK0);
         }
 
